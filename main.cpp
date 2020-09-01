@@ -16,7 +16,7 @@
 **************************************************
 */
 
-//********** H1 - INCLUDES **********
+//********** H1 - INCLUDES & USING STATEMENTS **********
 #include <iostream>
 #include <vector>
 #include <SFML/Audio.hpp>
@@ -34,7 +34,7 @@ void sleep(int m)
 //********** H1 - MAIN **********
 int main()
 {
-	//********** H1 - SoundManager Example **********
+	//***** H2 - SoundManager Example *****
 	AudioManager::SoundManager sm;
 
 	audioID_t audioID = sm.LoadSound("wavSound1.wav", false);
@@ -50,6 +50,8 @@ int main()
 		std::cout << sm.FormatErrorCode(playSuccess) << std::endl;
 		return -1;
 	}
+
+	std::cout << sm.GetPath(22);
 
 	while (sm.IsPlaying(audioID))
 	{

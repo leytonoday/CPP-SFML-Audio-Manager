@@ -5,7 +5,7 @@
 //********** H1 - AUDIOMANAGER NAMESPACE **********
 namespace AudioManager
 {
-	//********** H2 - Loaders and Play Functions **********
+	//***** H2 - Loaders and Play Functions *****
 	int SoundManager::LoadSound(const std::string& path, bool looping, float initVolume, float pitch)
 	{
 		if (!IsTypeSupported(path))

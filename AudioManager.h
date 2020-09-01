@@ -364,7 +364,7 @@ namespace AudioManager
 			T* ad = ReturnAudioData(audioID);
 
 			if (ad == nullptr)
-				return INVALID_AUDIO_ID;
+				return std::to_string(INVALID_AUDIO_ID);
 
 			return ad->path;
 		}
