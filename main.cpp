@@ -51,8 +51,6 @@ int main()
 		return -1;
 	}
 
-	std::cout << sm.GetPath(22);
-
 	while (sm.IsPlaying(audioID))
 	{
 		//The sound is playing here
