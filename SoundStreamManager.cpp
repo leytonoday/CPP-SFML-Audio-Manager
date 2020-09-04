@@ -11,60 +11,74 @@ namespace AudioManager
 		if (!IsTypeSupported(path))
 			return UNSUPPORTED_FILE;
 
-		if (audioMap.size() < AUDIO_LIMIT)
-		{
-			SoundStreamData as{looping, initVolume, pitch, path};
-			as.ID = GenerateID();
-			as.looping = looping;
-			audioMap[as.ID] = as;
-			return audioMap[as.ID].ID;
-		}
-		else
+		if (audioMap.size() >= AUDIO_LIMIT)
 			return AUDIO_LIMIT_EXCEEDED;
 
-		return SUCCESS;
+		SoundStreamData as{looping, initVolume, pitch, path};
+		as.ID = GenerateID();
+		as.looping = looping;
+		audioMap[as.ID] = as;
+		return audioMap[as.ID].ID;
 	}
 	int SoundStreamManager::CloseStream(audioID_t audioID)
 	{
-		for (auto iter = audioMap.begin(); iter != audioMap.end(); iter++)
-		{
-			delete iter->second.audio;
-			audioMap.erase(iter);
-			return SUCCESS;
-		}
-		return INVALID_AUDIO_ID;
+		SoundStreamData* ad = ReturnAudioData(audioID);
+
+		if (ad == nullptr)
+			return INVALID_AUDIO_ID;
+
+		auto result = audioMap.find(audioID);
+		delete result->second.audio;
+		audioMap.erase(result);
+		return SUCCESS;
 	}
 	int SoundStreamManager::PlayStream(audioID_t audioID)
 	{
 		SoundStreamData* as = ReturnAudioData(audioID);
 
-		if (as != nullptr)
+		if (as == nullptr)
+			return INVALID_AUDIO_ID;
+
+		if (!as->played)
 		{
 			as->audio = new sf::Music();
 			bool openSuccess = as->audio->openFromFile(as->path);
 			as->audio->setVolume(as->volume);
 			as->audio->setPitch(as->pitch);
 			as->audio->setLoop(as->looping);
-			as->audio->play();
 			as->played = true;
 		}
-		else
-			return INVALID_AUDIO_ID;
+
+		as->audio->play();
 
 		return SUCCESS;
 	}
 	int SoundStreamManager::PlayAll()
 	{
-		for (auto& i : audioMap)
+		for (auto& [key, audioData] : audioMap)
 		{
-			i.second.audio = new sf::Music();
-			bool openSuccess = i.second.audio->openFromFile(i.second.path);
-			i.second.audio->setVolume(i.second.volume);
-			i.second.audio->setPitch(i.second.pitch);
-			i.second.audio->setLoop(i.second.looping);
-			i.second.audio->play();
-			i.second.played = true;
+			if (!audioData.played)
+			{
+				audioData.audio = new sf::Music();
+				bool openSuccess = audioData.audio->openFromFile(audioData.path);
+				audioData.audio->setVolume(audioData.volume);
+				audioData.audio->setPitch(audioData.pitch);
+				audioData.audio->setLoop(audioData.looping);
+				audioData.played = true;
+			}
+			audioData.audio->play();
 		}
 		return SUCCESS;
+	}
+
+	//***** H2- Getter Functions *****
+	float SoundStreamManager::GetDuration(audioID_t audioID)
+	{
+		SoundStreamData* ad = ReturnAudioData(audioID);
+
+		if (ad == nullptr)
+			return INVALID_AUDIO_ID;
+
+		return ad->audio->getDuration().asMilliseconds();
 	}
 }

@@ -37,7 +37,7 @@ int main()
 	//***** H2 - SoundManager Example *****
 	AudioManager::SoundManager sm;
 
-	audioID_t audioID = sm.LoadSound("wavSound1.wav", false);
+	audioID_t audioID = sm.LoadSound("wavSound1.wav");
 	if (audioID < 0)
 	{
 		std::cout << sm.FormatErrorCode(audioID) << std::endl;
@@ -45,12 +45,13 @@ int main()
 	}
 
 	int playSuccess = sm.PlaySound(audioID);
+
 	if (playSuccess < 0)
 	{
 		std::cout << sm.FormatErrorCode(playSuccess) << std::endl;
 		return -1;
 	}
-
+	
 	while (sm.IsPlaying(audioID))
 	{
 		//The sound is playing here

@@ -11,31 +11,30 @@ namespace AudioManager
 		if (!IsTypeSupported(path))
 			return UNSUPPORTED_FILE;
 
-		if (audioMap.size() < AUDIO_LIMIT)
-		{
-			SoundData ad{looping, initVolume, pitch, path};
-			bool loadSuccess = ad.soundBuffer.loadFromFile(path);
-			if (!loadSuccess)
-				return FILE_NOT_FOUND;
-			ad.ID = GenerateID();
-			ad.looping = looping;
-			audioMap[ad.ID] = ad;
-			return audioMap[ad.ID].ID;
-		}
-		else
+		if (audioMap.size() >= AUDIO_LIMIT)
 			return AUDIO_LIMIT_EXCEEDED;
 
-		return SUCCESS;
+		SoundData ad{looping, initVolume, pitch, path};
+		bool loadSuccess = ad.soundBuffer.loadFromFile(path);
+		if (!loadSuccess)
+			return FILE_NOT_FOUND;
+
+		ad.ID = GenerateID();
+		ad.looping = looping;
+		audioMap[ad.ID] = ad;
+		return audioMap[ad.ID].ID;
 	}
 	int SoundManager::UnloadSound(audioID_t audioID)
 	{
-		for (auto iter = audioMap.begin(); iter != audioMap.end(); iter++)
-		{
-			delete iter->second.audio;
-			audioMap.erase(iter);
-			return SUCCESS;
-		}
-		return INVALID_AUDIO_ID;
+		SoundData* ad = ReturnAudioData(audioID);
+
+		if (ad == nullptr)
+			return INVALID_AUDIO_ID;
+
+		auto result = audioMap.find(audioID);
+		delete result->second.audio;
+		audioMap.erase(result);
+		return SUCCESS;
 	}
 	int SoundManager::MixSounds(bool looping, float initVolume, float pitch, int sampleRate, int numArgs, ...)
 	{
@@ -117,7 +116,10 @@ namespace AudioManager
 	{
 		SoundData* ad = ReturnAudioData(audioID);
 
-		if (ad != nullptr)
+		if (ad == nullptr)
+			return INVALID_AUDIO_ID;
+		
+		if (!ad->played) //If the sound has been played previously, then do not recreate the sound
 		{
 			sf::Sound* sound = new sf::Sound();
 			sound->setBuffer(ad->soundBuffer);
@@ -125,27 +127,40 @@ namespace AudioManager
 			sound->setPitch(ad->pitch);
 			sound->setLoop(ad->looping);
 			ad->audio = sound;
-			sound->play();
 			ad->played = true;
 		}
-		else
-			return INVALID_AUDIO_ID;
 
+		ad->audio->play();
+		
 		return SUCCESS;
 	}
 	int SoundManager::PlayAll()
 	{
-		for (auto& i : audioMap)
+		for (auto& [key, audioData]: audioMap)
 		{
-			sf::Sound* sound = new sf::Sound();
-			sound->setBuffer(i.second.soundBuffer);
-			sound->setVolume(i.second.volume);
-			sound->setPitch(i.second.pitch);
-			sound->setLoop(i.second.looping);
-			i.second.audio = sound;
-			sound->play();
-			i.second.played = true;
+			if (!audioData.played) //If the sound has been played previously, then do not recreate the sound
+			{
+				sf::Sound* sound = new sf::Sound();
+				sound->setBuffer(audioData.soundBuffer);
+				sound->setVolume(audioData.volume);
+				sound->setPitch(audioData.pitch);
+				sound->setLoop(audioData.looping);
+				audioData.audio = sound;
+				audioData.played = true;
+			}
+			audioData.audio->play();
 		}
 		return SUCCESS;
+	}
+
+	//***** H2- Getter Functions *****
+	float SoundManager::GetDuration(audioID_t audioID)
+	{
+		SoundData* ad = ReturnAudioData(audioID);
+
+		if (ad == nullptr)
+			return INVALID_AUDIO_ID;
+
+		return ad->soundBuffer.getDuration().asMilliseconds();
 	}
 }

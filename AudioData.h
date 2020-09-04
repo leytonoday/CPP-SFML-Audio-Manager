@@ -8,7 +8,7 @@
 //********** H1 - AUDIOMANAGER NAMESPACE **********
 namespace AudioManager
 {
-	using audioID_t = unsigned int; //This will be used to represent all audioIDs
+	using audioID_t = std::uint32_t; //This will be used to represent all audioIDs
 
 	//***** H2 - AudioDataBase Structure *****
 	struct AudioDataBase

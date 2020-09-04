@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <chrono>
 #include <iostream>
-#include <list>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string>
@@ -32,10 +31,8 @@ namespace AudioManager
 		AUDIO_NOT_PLAYED		= -4,		//This is returned when IsPlaying, IsPaused, Resume, Pause, Stop is called, and the target sound is yet to be played. 
 		AUDIO_NOT_PAUSED		= -5,		//This is used for the resume function. If the user tries to resume audio that is already playing and not paused, this is returned
 		FILE_NOT_FOUND			= -6,		//This is returned when the user attemps to load a file that cannot be found
-		VOLUME_OUT_OF_RANGE		= -7,		//This is returned when the user attempts to change the volume to an invalid value
-		PITCH_OUT_OF_RANGE		= -8,		//This is returned when the user attempts to change th pitch to an invalid value
-		AUDIO_STOPPED			= -9,		//This is returned when the user attempts to resume audio when it has been stopped
-		POSITION_OUT_OF_RANGE	= -10,		//This is returned when the user attempts to set the position of audio to an invalid position
+		AUDIO_STOPPED			= -7,		//This is returned when the user attempts to resume audio when it has been stopped
+		AUDIO_ALREADY_PLAYING	= -8		//This is returned when the user attempts the play a sound, when it is already playing
 	};
 
 	//***** H2 - AudioStates Enum *****
@@ -53,46 +50,31 @@ namespace AudioManager
 	public:
 		//*** H3 - member functions ***
 		//** H4 - utility functions **
-		std::string FormatErrorCode(int errorCode)
+		template <typename T>
+		static std::string FormatErrorCode(T errorCode)
 		{
 			switch (errorCode)
 			{
 			case SUCCESS:
 				return "Error Code 0 (SUCCESS): Success";
-				break;
 			case UNSUPPORTED_FILE:
 				return "Error Code -1 (UNSUPPORTED_FILE): Unsupported file type, supported types are: .ogg,, .wav, .flac";
-				break;
 			case AUDIO_LIMIT_EXCEEDED:
 				return "Error Code -2 (AUDIO_LIMIT_EXCEEDED): Audio limit of 256 cannot be exceeded";
-				break;
 			case INVALID_AUDIO_ID:
 				return "Error Code -3 (INVALID_AUDIO_ID): Invalid audioID passed";
-				break;
 			case AUDIO_NOT_PLAYED:
 				return "Error Code -4 (AUDIO_NOT_PLAYED): Audio has not been played yet";
-				break;
 			case AUDIO_NOT_PAUSED:
 				return "Error Code -5 (AUDIO_NOT_PAUSED): Audio is not currently paused";
-				break;
 			case FILE_NOT_FOUND:
 				return "Error Code -6 (FILE_NOT_FOUND): File could not be found";
-				break;
-			case VOLUME_OUT_OF_RANGE:
-				return "Error Code -7 (VOLUME_OUT_OF_RANGE): Volume is out of range (keep between 0-100)";
-				break;
-			case PITCH_OUT_OF_RANGE:
-				return "Error Code -8 (PITCH_OUT_OF_RANGE): Pitch is out of range (cannot be below 0)";
-				break;
 			case AUDIO_STOPPED:
-				return "Error Code -9 (AUDIO_STOPPED): Audio has been stopped";
-				break;
-			case POSITION_OUT_OF_RANGE:
-				return "Error Code -10 (POSITION_OUT_OF_RANGE): Position is out of range (cannot exceed the audio duration)";
-				break;
+				return "Error Code -7 (AUDIO_STOPPED): Audio has been stopped";
+			case AUDIO_ALREADY_PLAYING:
+				return "Error Code -8 (AUDIO_ALREADY_PLAYING): Sound/Stream is already playing";
 			default:
 				return "Invalid Error Code";
-				break;
 			}
 		}		
 		audioID_t GenerateID()
@@ -100,21 +82,19 @@ namespace AudioManager
 			IDCounter++;
 			return IDCounter;
 		}
-		bool IsTypeSupported(std::string path)
+		bool IsTypeSupported(const std::string& path)
 		{
 			const int dotIndex = path.find_last_of('.');
-			const std::string fileExtension = path.substr(dotIndex);
-			bool contains = std::find(supportedFileExtensions.begin(), supportedFileExtensions.end(), fileExtension) != supportedFileExtensions.end();
+			bool contains = std::find(supportedFileExtensions.begin(), supportedFileExtensions.end(), path.substr(dotIndex)) != supportedFileExtensions.end();
 			return contains;
 		}
 		T* ReturnAudioData(int audioID)
 		{
-			for (auto& i : audioMap)
-			{
-				if (audioID == i.first)
-					return &i.second;
-			}
-			return nullptr;
+			auto result = audioMap.find(audioID);
+			if (result == audioMap.end())
+				return nullptr;
+			else
+				return &(result->second);
 		}
 
 		//** H4 - sound control functions **
@@ -133,9 +113,8 @@ namespace AudioManager
 		}
 		int PauseAll()
 		{
-			for (auto& i : audioMap)
+			for (const auto & [key, audioData] : audioMap)
 			{
-				T& audioData = i.second;
 				if (!audioData.played)
 					return AUDIO_NOT_PLAYED;
 				audioData.audio->pause();
@@ -162,9 +141,8 @@ namespace AudioManager
 		}
 		int ResumeAll()
 		{
-			for (auto& i : audioMap)
+			for (const auto& [key, audioData] : audioMap)
 			{
-				T& audioData = i.second;
 				if (audioData.played && audioData.audio->getStatus() == PAUSED)
 					audioData.audio->play();
 				else if (audioData.played && audioData.audio->getStatus() == PLAYING)
@@ -189,9 +167,8 @@ namespace AudioManager
 		}
 		int StopAll()
 		{
-			for (auto& i : audioMap)
+			for (const auto& [key, audioData] : audioMap)
 			{
-				T& audioData = i.second;
 				if (audioData.played)
 					audioData.audio->stop();
 				else
@@ -203,28 +180,22 @@ namespace AudioManager
 		//** H4 - setter functions **
 		int SetPitchAll(float pitch)
 		{
-			if (pitch < 0)
-				return PITCH_OUT_OF_RANGE;
-			for (auto& i : audioMap)
-				i.second.audio->setPitch(pitch);
+			for (const auto& [key, audioData] : audioMap)
+				audioData.audio->setPitch(std::clamp(pitch, 0, 15));
 			return SUCCESS;
 		}
 		int SetVolumeAll(float volume)
 		{
-			if (!(volume >= 0 && volume <= 00))
-				return VOLUME_OUT_OF_RANGE;
-			for (auto& i : audioMap)
-				i.second.audio->setVolume(volume);
+			for (const auto& [key, audioData] : audioMap)
+				audioData.audio->setVolume(std::clamp(volume, 0, 100));
 			return SUCCESS;
 		}
 		int SetPlayingPositionAll(int position)
 		{
-			for (auto& i : audioMap)
+			for (const auto& [key, audioData] : audioMap)
 			{
-				if (position < 0 || position > GetDuration(i.first))
-					return POSITION_OUT_OF_RANGE;
 				sf::Time offset = sf::milliseconds(position);
-				i.second.audio->setPlayingOffset(offset);
+				audioData.audio->setPlayingOffset(std::clamp(position, 0, GetDuration(key)));
 			}
 			return SUCCESS;
 		}
@@ -232,47 +203,32 @@ namespace AudioManager
 		{
 			T* ad = ReturnAudioData(audioID);
 
-			if (ad != nullptr && !(pitch < 0))
-			{
-				ad->audio->setPitch(pitch);
-				return SUCCESS;
-			}
-			else if (ad == nullptr)
+			if (ad == nullptr)
 				return INVALID_AUDIO_ID;
-			else if (pitch < 0)
-				return PITCH_OUT_OF_RANGE;
+
+			ad->audio->setPitch(std::clamp(pitch, 0, 15));
+			return SUCCESS;
 		}
 		int SetVolume(audioID_t audioID, float volume)
 		{
 			T* ad = ReturnAudioData(audioID);
 
-			if (ad != nullptr && volume >= 0 && volume <= 100)
-			{
-				ad->audio->setVolume(volume);
-				return SUCCESS;
-			}
-			else if (ad == nullptr)
+			if (ad == nullptr)
 				return INVALID_AUDIO_ID;
-			else if (!(volume > 0 && volume < 100))
-				return VOLUME_OUT_OF_RANGE;
+
+			ad->audio->setVolume(std::clamp(volume, 0.0f, 100.0f));
+			return SUCCESS;
 		}
 		int SetPlayingPosition(audioID_t audioID, int position)
 		{
 			T* ad = ReturnAudioData(audioID);
 
-			if (ad != nullptr)
-			{
-				if (position < 0 || position > GetDuration(audioID))
-					return POSITION_OUT_OF_RANGE;
-				else
-				{
-					sf::Time offset = sf::milliseconds(position);
-					ad->audio->setPlayingOffset(offset);
-					return SUCCESS;
-				}
-			}
-			else
+			if (ad == nullptr)
 				return INVALID_AUDIO_ID;
+
+			sf::Time offset = sf::milliseconds(position);
+			ad->audio->setPlayingOffset(std::clamp(position, 0, GetDuration(audioID)));
+			return SUCCESS;
 		}
 		
 
@@ -281,27 +237,30 @@ namespace AudioManager
 		{
 			T* ad = ReturnAudioData(audioID);
 
-			if (ad != nullptr && IsPlaying(audioID))
-				return ad->audio->getPitch();
-			else if (ad == nullptr)
+			if (ad == nullptr)
 				return INVALID_AUDIO_ID;
-			else if (!IsPlaying(audioID))
+
+			if (!IsPlaying(audioID))
 				return AUDIO_NOT_PLAYED;
+
+			return ad->audio->getPitch();
 		}
 		float GetVolume(audioID_t audioID) 
 		{
 			T* ad = ReturnAudioData(audioID);
 
-			if (ad != nullptr && IsPlaying(audioID))
-				return ad->audio->getVolume();
-			else if (ad == nullptr)
+			if (ad == nullptr)
 				return INVALID_AUDIO_ID;
-			else if (!IsPlaying(audioID))
+
+			if (!IsPlaying(audioID))
 				return AUDIO_NOT_PLAYED;
+
+			return ad->audio->getVolume();
 		}
 		int IsPaused(audioID_t audioID) 
 		{
 			T* ad = ReturnAudioData(audioID);
+
 			if (ad == nullptr)
 				return INVALID_AUDIO_ID;
 
@@ -316,43 +275,30 @@ namespace AudioManager
 			if (ad == nullptr)
 				return INVALID_AUDIO_ID;
 
-			if (!ad->played)
-				return AUDIO_NOT_PLAYED;
-
 			return ad->audio->getStatus() == PLAYING;
 		}
-		float GetDuration(audioID_t audioID) 
+		float GetDuration(audioID_t audioID);
+		float GetPlayingPosition(audioID_t audioID) 
 		{
 			T* ad = ReturnAudioData(audioID);
 
 			if (ad == nullptr)
 				return INVALID_AUDIO_ID;
 
-			return ad->audio->getDuration().asMilliseconds();
-		}
-		float GetPlayingPosition(audioID_t audioID) 
-		{
-			T* ad = ReturnAudioData(audioID);
-
-			if (ad != nullptr)
-			{
-				return ad->audio->getPlayingOffset().asMilliseconds();
-			}
-			else
-				return INVALID_AUDIO_ID;
+			return ad->audio->getPlayingOffset().asMilliseconds();
 		}
 		std::vector<int> GetAllIDs()
 		{
 			std::vector<int> IDs;
-			for (auto& i : audioMap)
-				IDs.push_back(i.second.ID);
+			for (const auto & [key, audioData]: audioMap)
+				IDs.push_back(key);
 			return IDs;
 		}
 		bool IsManagerActive()
 		{
 			bool active = false;
-			for (auto& i : audioMap)
-				active = IsPlaying(i.first);
+			for (const auto & [key, audioData]: audioMap)
+				active = IsPlaying(key);
 			return active;
 		}
 		int GetAudioCount()
@@ -399,11 +345,14 @@ namespace AudioManager
 	{
 	public:
 		//*** H3 - loaders and play functions ***
-		int LoadSound(const std::string& path, bool looping, float initVolume = 100, float pitch = 1);
+		int LoadSound(const std::string& path, bool looping = false, float initVolume = 100, float pitch = 1);
 		int UnloadSound(audioID_t audioID);
 		int MixSounds(bool looping, float initVolume, float pitch, int sampleRate, int numArgs, ...);
 		int PlaySound(audioID_t audioID);
 		int PlayAll();
+
+		//*** H3 - getter functions ***
+		float GetDuration(audioID_t audioID);
 	};
 
 	//***** H2 - SoundStreamManager Class *****
@@ -411,10 +360,13 @@ namespace AudioManager
 	{
 	public:
 		//*** H3 - loaders and play functions ***
-		int OpenStream(const std::string& path, bool looping, float initVolume = 100, float pitch = 1);
+		int OpenStream(const std::string& path, bool looping = false, float initVolume = 100, float pitch = 1);
 		int CloseStream(audioID_t audioID);
 		int PlayStream(audioID_t audioID);
 		int PlayAll();
+
+		//*** H3 - getter functions ***
+		float GetDuration(audioID_t audioID);
 	};
 }
 
