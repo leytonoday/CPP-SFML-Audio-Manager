@@ -1,3 +1,0 @@
-git add <new files, or files that have been updated>
-git commit -m "Comment"
-git push origin master
