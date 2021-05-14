@@ -6,14 +6,14 @@ the user with two simple classes: SoundManager (for short audio) and SoundStream
 
 This can be used in graphical applications or even command line applications! There are 3 wav files you can use to test out the functionality of the library if you are interested. 
 
-# Installation 
+## Installation 
 The Audio Manager used SFML as a backend. It's simply a convenient wrapper and helper for the SFML audio library.
 First, you must install SFML in your project. Go here for more details on that: https://www.sfml-dev.org/tutorials/2.5/start-vc.php 
 
 Once SFML is installed and linked correctly in your C++ application, simply copy the ```.cpp``` and ```.h``` files into your C++ project. Then you'll have access to the 
 aforementioned classes, that reside in the ```AudioManager``` namespace.
 
-# Usage
+## Usage
 In the example below, I use a lot of error handling. However, this isn't entirely neccessary, I just do this to display how it would be done. If you wanted, you could just call these functions without the error handling, e.g. ```c++ int playSuccess = sm.PlaySound(audioID);```
 
 ```c++
@@ -62,7 +62,13 @@ int main()
 }
 ```
 
-# Credits
+## Credits
 My code and the design of the Audio Manager was greatly improved and optimized with the help of lapinozz, https://github.com/lapinozz 
 
 SFML was used as a basis for the code: https://www.sfml-dev.org/ 
+
+
+## Contributing
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+
+Contact me for general enqueries here: leytonodayabc123@gmail.com
