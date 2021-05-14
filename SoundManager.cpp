@@ -1,11 +1,11 @@
-//********** H1 - INCLUDES **********
+//********** INCLUDES **********
 #include "AudioData.h"
 #include "AudioManager.h"
 
-//********** H1 - AUDIOMANAGER NAMESPACE **********
+//********** AUDIOMANAGER NAMESPACE **********
 namespace AudioManager
 {
-	//***** H2 - Loaders and Play Functions *****
+	//***** Loaders and Play Functions *****
 	int SoundManager::LoadSound(const std::string& path, bool looping, float initVolume, float pitch)
 	{
 		if (!IsTypeSupported(path))
@@ -44,7 +44,7 @@ namespace AudioManager
 		va_list argList;
 		int averageSampleRate = 0; // Only used is matchSampleRate is true
 
-		//***** H2 - Find mixedSampleCount & Get averageSampleRate *****
+		//***** Find mixedSampleCount & Get averageSampleRate *****
 		va_start(argList, numArgs);
 		for (int i = 0; i < numArgs; i++)
 		{
@@ -64,7 +64,7 @@ namespace AudioManager
 		if (sampleRate == -1)
 			averageSampleRate /= numArgs;
 
-		//***** H2 - Create The sampleMatrix *****
+		//***** Create The sampleMatrix *****
 		const std::int16_t** sampleMatrix = new const std::int16_t * [mixedSamplesCount];
 		for (int i = 0; i < vaArgIDVec.size(); i++)
 		{
@@ -73,7 +73,7 @@ namespace AudioManager
 			memcpy(&sampleMatrix[i], ad->soundBuffer.getSamples(), sizeof(std::int16_t));
 		}
 
-		//***** H2 - Create The sampleMatrix *****
+		//***** Create The sampleMatrix *****
 		std::int16_t* mixedSamples = new std::int16_t[mixedSamplesCount];
 		for (int i = 0; i < mixedSamplesCount; i++)
 		{
@@ -90,7 +90,7 @@ namespace AudioManager
 			mixedSamples[i] = totalSample;
 		}
 
-		//***** H2 - Generate Sound *****
+		//***** Generate Sound *****
 		int returnID;
 		if (audioMap.size() < AUDIO_LIMIT)
 		{
@@ -153,7 +153,6 @@ namespace AudioManager
 		return SUCCESS;
 	}
 
-	//***** H2- Getter Functions *****
 	float SoundManager::GetDuration(audioID_t audioID)
 	{
 		SoundData* ad = ReturnAudioData(audioID);

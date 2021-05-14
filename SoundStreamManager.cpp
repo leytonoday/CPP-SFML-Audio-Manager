@@ -1,8 +1,8 @@
-//********** H1 - INCLUDES **********
+//********** INCLUDES **********
 #include "AudioData.h"
 #include "AudioManager.h"
 
-//********** H1 - AUDIOMANAGER NAMESPACE **********
+//********** AUDIOMANAGER NAMESPACE **********
 namespace AudioManager
 {
 	//***** H2- Loaders and Play Functions *****
@@ -70,8 +70,6 @@ namespace AudioManager
 		}
 		return SUCCESS;
 	}
-
-	//***** H2- Getter Functions *****
 	float SoundStreamManager::GetDuration(audioID_t audioID)
 	{
 		SoundStreamData* ad = ReturnAudioData(audioID);

@@ -1,7 +1,7 @@
 #ifndef AUDIO_MANAGER_H
 #define AUDIO_MANAGER_H
 
-//********** H1 - INCLUDES **********
+//********** INCLUDES **********
 #include <algorithm>
 #include <chrono>
 #include <iostream>
@@ -18,10 +18,10 @@
 
 #include <SFML/Audio.hpp>
 
-//********** H1 - AUDIOMANAGER NAMESPACE **********
+//********** AUDIOMANAGER NAMESPACE **********
 namespace AudioManager
 {
-	//***** H2 - ErrorCodes Enum *****
+	//***** ErrorCodes Enum *****
 	static enum ErrorCodes
 	{
 		SUCCESS					= 0,		//This is returned when the function succeeds
@@ -35,7 +35,7 @@ namespace AudioManager
 		AUDIO_ALREADY_PLAYING	= -8		//This is returned when the user attempts the play a sound, when it is already playing
 	};
 
-	//***** H2 - AudioStates Enum *****
+	//***** AudioStates Enum *****
 	static enum AudioStates
 	{
 		STOPPED		= 0,		//This indicates that a sound/stream is stopped
@@ -43,13 +43,11 @@ namespace AudioManager
 		PLAYING		= 2			//This indicates that a sound/stream is playing
 	};
 
-	//***** H2 - AudioManager Template Class*****
+	//***** AudioManager Template Class*****
 	template <class T>
 	class AudioManagerBase
 	{
 	public:
-		//*** H3 - member functions ***
-		//** H4 - utility functions **
 		template <typename T>
 		static std::string FormatErrorCode(T errorCode)
 		{
@@ -97,7 +95,7 @@ namespace AudioManager
 				return &(result->second);
 		}
 
-		//** H4 - sound control functions **
+		//** sound control functions **
 		int Pause(audioID_t audioID)
 		{
 			T* ad = ReturnAudioData(audioID);
@@ -177,7 +175,7 @@ namespace AudioManager
 			return SUCCESS;
 		}
 
-		//** H4 - setter functions **
+		//** setter functions **
 		int SetPitchAll(float pitch)
 		{
 			for (const auto& [key, audioData] : audioMap)
@@ -232,7 +230,7 @@ namespace AudioManager
 		}
 		
 
-		//** H4 - getter functions **
+		//** getter functions **
 		float GetPitch(audioID_t audioID)
 		{
 			T* ad = ReturnAudioData(audioID);
@@ -315,7 +313,7 @@ namespace AudioManager
 			return ad->path;
 		}
 
-		//** H4 - misc. functions **
+		//** misc. functions **
 		float DBToVolume(float dB)
 		{
 			return powf(10.0f, 0.05f * dB);
@@ -325,47 +323,37 @@ namespace AudioManager
 			return 20.0f * log10f(volume);
 		}
 
-		//*** H3 - containers ***
+		//*** containers ***
 		std::unordered_map<audioID_t, T> audioMap;
 		std::vector<audioID_t> IDVec;
 		std::vector<std::string> supportedFileExtensions{ ".ogg", ".wav", ".flac", ".aiff", ".au", ".raw", ".paf", ".svx", ".nist",
 														".voc", ".ircam", ".w64", ".mat4", ".mat5", ".pvf", ".htk", ".sds", ".avr",
 														".sd2", ".caf", ".wve", ".mpc2k", ".rf64" };
 
-		//*** H3 - data members ***
-		//** H4 - variables **
 		unsigned int IDCounter = 0; //This will be incremented every GenerateID() call, and it's value will be used as a unique soundID
-
-		//** H4 - constants **
 		const unsigned int AUDIO_LIMIT = 255;
 	};
 
-	//***** H2 - SoundManager Class *****
+	//***** SoundManager Class *****
 	class SoundManager : public AudioManagerBase<SoundData>
 	{
 	public:
-		//*** H3 - loaders and play functions ***
 		int LoadSound(const std::string& path, bool looping = false, float initVolume = 100, float pitch = 1);
 		int UnloadSound(audioID_t audioID);
 		int MixSounds(bool looping, float initVolume, float pitch, int sampleRate, int numArgs, ...);
 		int PlaySound(audioID_t audioID);
 		int PlayAll();
-
-		//*** H3 - getter functions ***
 		float GetDuration(audioID_t audioID);
 	};
 
-	//***** H2 - SoundStreamManager Class *****
+	//***** SoundStreamManager Class *****
 	class SoundStreamManager : public AudioManagerBase<SoundStreamData>
 	{
 	public:
-		//*** H3 - loaders and play functions ***
 		int OpenStream(const std::string& path, bool looping = false, float initVolume = 100, float pitch = 1);
 		int CloseStream(audioID_t audioID);
 		int PlayStream(audioID_t audioID);
 		int PlayAll();
-
-		//*** H3 - getter functions ***
 		float GetDuration(audioID_t audioID);
 	};
 }
