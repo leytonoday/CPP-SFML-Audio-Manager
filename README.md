@@ -14,7 +14,7 @@ Once SFML is installed and linked correctly in your C++ application, simply copy
 aforementioned classes, that reside in the ```AudioManager``` namespace.
 
 ## Usage
-In the example below, I use a lot of error handling. However, this isn't entirely neccessary, I just do this to display how it would be done. If you wanted, you could just call these functions without the error handling, e.g. ```c++ int playSuccess = sm.PlaySound(audioID);```
+In the example below, I use a lot of error handling. However, this isn't entirely neccessary, I just do this to display how it would be done. If you wanted, you could just call these functions without the error handling, e.g. ```int playSuccess = sm.PlaySound(audioID);```
 
 ```c++
 //********** INCLUDES & USING STATEMENTS **********
