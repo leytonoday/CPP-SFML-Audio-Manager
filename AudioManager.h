@@ -25,9 +25,9 @@ namespace AudioManager
 	static enum ErrorCodes
 	{
 		SUCCESS				= 0,		//This is returned when the function succeeds
-		UNSUPPORTED_FILE		= -1,		//This is returned when the user attempts to return an unsupported file type
-		AUDIO_LIMIT_EXCEEDED		= -2,		//This is returned when the user tries to load more than 256
-		INVALID_AUDIO_ID		= -3,		//This is returned when a given soundID doesn't correspond to a sound, and so the target sound doesn't exist
+		UNSUPPORTED_FILE		= -1,		//This is returned when the user attempts to load an unsupported file type
+		AUDIO_LIMIT_EXCEEDED		= -2,		//This is returned when the user tries to load more than 250 files
+		INVALID_AUDIO_ID		= -3,		//This is returned when a given audioID doesn't correspond to a sound, and so the target sound doesn't exist
 		AUDIO_NOT_PLAYED		= -4,		//This is returned when IsPlaying, IsPaused, Resume, Pause, Stop is called, and the target sound is yet to be played. 
 		AUDIO_NOT_PAUSED		= -5,		//This is used for the resume function. If the user tries to resume audio that is already playing and not paused, this is returned
 		FILE_NOT_FOUND			= -6,		//This is returned when the user attemps to load a file that cannot be found
