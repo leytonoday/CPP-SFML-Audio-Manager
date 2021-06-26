@@ -24,7 +24,7 @@ namespace AudioManager
 	//***** SoundData Structure *****
 	struct SoundData : AudioDataBase
 	{
-		sf::SoundBuffer soundBuffer;
+		sf::SoundBuffer 	soundBuffer;
 		sf::Sound*		audio;
 	};
 
